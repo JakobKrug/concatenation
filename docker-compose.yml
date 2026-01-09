@@ -1,0 +1,54 @@
+services:
+  concatenation:
+    container_name: concatenation
+    image: itzg/minecraft-server:java17
+    tty: true
+    stdin_open: true
+    ports:
+      - "25565:25565"
+    environment:
+      EULA: true
+      ALLOW_FLIGHT: true
+      MEMORY: "12G"
+      USE_AIKAR_FLAGS: "true"
+      USE_MEOWICE_FLAGS: "true"
+      MOTD: "Lets Go"
+      ICON: "https://media.forgecdn.net/avatars/thumbnails/1401/272/64/64/638908239188134414.png"
+      TZ: "Europe/Berlin"
+      DIFFICULTY: 3
+      SIMULATION_DISTANCE: 12
+      VIEW_DISTANCE: 12
+      SPAWN_PROTECTION: 0
+      ENABLE_WHITELIST: true
+      TYPE: "FORGE"
+      VERSION: "1.20.1"
+      GENERIC_PACK: "/modpacks/server.zip"
+      DELETE_OLD_MODS: true
+      FORCE_GENERIC_PACK_UPDATE: true
+      SKIP_GENERIC_PACK_CHECKSUM: true
+    volumes:
+      - "./data/concatenation:/data"
+      - "./modpacks/:/modpacks:ro"
+    healthcheck:
+      test: ["CMD", "mc-health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  concatenation-backup:
+    image: itzg/mc-backup
+    container_name: concatenation-backup
+    depends_on:
+      concatenation:
+        condition: service_healthy
+    environment:
+      BACKUP_INTERVAL: "1h"
+      RCON_HOST: concatenation
+      DEST_DIR: /backups
+      PRUNE_BACKUPS_COUNT: "2"
+      TZ: Europe/Berlin
+      INITIAL_DELAY: 0
+    volumes:
+      - ./data/concatenation:/data:ro
+      - ./backups:/backups
