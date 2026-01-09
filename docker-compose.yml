@@ -30,18 +30,13 @@ services:
       - "./data/concatenation:/data"
       - "./modpacks/:/modpacks:ro"
     healthcheck:
-      test: ["CMD", "mc-health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
+      disable: true
 
   concatenation-backup:
     image: itzg/mc-backup
     container_name: concatenation-backup
     depends_on:
-      concatenation:
-        condition: service_healthy
+      concatenation: service_started
     environment:
       BACKUP_INTERVAL: "1h"
       RCON_HOST: concatenation
