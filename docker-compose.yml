@@ -1,14 +1,18 @@
 services:
   concatenation:
-    container_name: concatenation
     image: itzg/minecraft-server:java17
+    container_name: concatenation
     tty: true
     stdin_open: true
+    networks:
+      - concatenation_net
     ports:
       - "25565:25565"
     environment:
-      EULA: true
-      ALLOW_FLIGHT: true
+      EULA: "true"
+      ENABLE_RCON: "true"
+      RCON_PASSWORD: "rcon-password"
+      ALLOW_FLIGHT: "true"
       MEMORY: "12G"
       USE_AIKAR_FLAGS: "true"
       USE_MEOWICE_FLAGS: "true"
@@ -19,31 +23,42 @@ services:
       SIMULATION_DISTANCE: 12
       VIEW_DISTANCE: 12
       SPAWN_PROTECTION: 0
-      ENABLE_WHITELIST: true
+      ENABLE_WHITELIST: "true"
       TYPE: "FORGE"
       VERSION: "1.20.1"
       GENERIC_PACK: "/modpacks/server.zip"
-      DELETE_OLD_MODS: true
-      FORCE_GENERIC_PACK_UPDATE: true
-      SKIP_GENERIC_PACK_CHECKSUM: true
+      DELETE_OLD_MODS: "true"
+      FORCE_GENERIC_PACK_UPDATE: "true"
+      SKIP_GENERIC_PACK_CHECKSUM: "true"
     volumes:
       - "./data/concatenation:/data"
       - "./modpacks/:/modpacks:ro"
     healthcheck:
       disable: true
+    restart: unless-stopped
 
-  concatenation-backup:
+  mc-backup:
     image: itzg/mc-backup
-    container_name: concatenation-backup
+    container_name: mc-backup
+    networks:
+      - concatenation_net
     depends_on:
-      concatenation: service_started
+      concatenation:
+        condition: service_started
     environment:
       BACKUP_INTERVAL: "1h"
-      RCON_HOST: concatenation
-      DEST_DIR: /backups
+      RCON_HOST: "concatenation"
+      RCON_PASSWORD: "rcon-password"
+      DEST_DIR: "/backups"
+      REMOVE_OLD_BACKUPS: "true"
       PRUNE_BACKUPS_COUNT: "2"
-      TZ: Europe/Berlin
-      INITIAL_DELAY: 0
+      TZ: "Europe/Berlin"
+      INITIAL_DELAY: "0"
     volumes:
-      - ./data/concatenation:/data:ro
-      - ./backups:/backups
+      - "./data/concatenation:/data:ro"
+      - "./backups:/backups"
+    restart: unless-stopped
+
+networks:
+  concatenation_net:
+    name: concatenation
